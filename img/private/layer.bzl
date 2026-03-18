@@ -142,8 +142,9 @@ def _image_layer_impl(ctx):
             executable_runfiles_args.add_all(runfiles.root_symlinks, map_each = _root_symlinks_arg)
             args.append(executable_runfiles_args)
             inputs.append(runfiles.files)
+
             inputs.append(runfiles.symlinks)
-            inputs.append(runfiles.root_symlinks)
+            inputs.append(depset([link.target_file for link in runfiles.root_symlinks.to_list()]))
             repo_mapping_manifest = _get_repo_mapping_manifest(files)
             if repo_mapping_manifest != None:
                 inputs.append(depset([repo_mapping_manifest]))
