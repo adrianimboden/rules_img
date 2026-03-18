@@ -167,9 +167,27 @@ def _image_layer_impl(ctx):
     args.append(out.path)
 
     img_toolchain_info = ctx.toolchains[TOOLCHAIN].imgtoolchaininfo
+    deps_without_symlink_entries = [
+        depset([dep for dep in input_list.to_list() if type(dep) != "SymlinkEntry"])
+        for input_list in inputs
+    ]
+
+    # bazel does not want depsets of mixed type (File+SymlinkEntry). And additionally, ctx.actions.run only wants depsets of type File.
+    # So we recreate the symlinks here locally to be able to pass the symlinks as normal files
+    recreated_symlinks = []
+    recreated_symlink_targets = []
+    for input_list in inputs:
+        for dep in input_list.to_list():
+            if type(dep) == "SymlinkEntry":
+                symlink = ctx.actions.declare_file(dep.path)
+                print(dep)
+                print(symlink)
+                ctx.actions.symlink(output = symlink, target_file = dep.target_file)
+                recreated_symlinks.append(symlink)
+                recreated_symlink_targets.append(dep.target_file)
     ctx.actions.run(
         outputs = [out, metadata_out],
-        inputs = depset(transitive = inputs),
+        inputs = depset(transitive = [depset(transitive = deps_without_symlink_entries), depset(recreated_symlinks + recreated_symlink_targets)]),
         executable = img_toolchain_info.tool_exe,
         arguments = args,
         mnemonic = "LayerTar",
