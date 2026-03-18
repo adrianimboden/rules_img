@@ -1,0 +1,17 @@
+bazel_dep(name = "rules_python", version = "1.7.0")
+bazel_dep(name = "aspect_rules_py", version = "1.9.1")
+bazel_dep(name = "xz", version = "5.4.5.bcr.8")
+bazel_dep(name = "rules_go", version = "0.60.0")
+bazel_dep(name = "rules_img")
+local_path_override(
+    module_name = "rules_img",
+    path = "../..",
+)
+
+bazel_dep(name = "rules_img_tool")
+local_path_override(
+    module_name = "rules_img_tool",
+    path = "../../img_tool",
+)
+
+register_toolchains("@rules_img_tool//toolchain:all")
